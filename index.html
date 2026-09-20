@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width,
+                   initial-scale=1.0">
+
+    <title>JARVIS 3.2</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #050505;
+            color: white;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+
+        header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 4px;
+        }
+
+        .status {
+            color: #00ff99;
+            font-size: 13px;
+        }
+
+        /* MAIN */
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* ARC */
+
+        .reactor {
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            border: 3px solid #00eaff;
+            box-shadow:
+                0 0 20px #00eaff,
+                0 0 50px rgba(0, 234, 255, 0.5),
+                inset 0 0 30px rgba(0, 234, 255, 0.4);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 35px;
+
+            animation: pulse 2s infinite;
+        }
+
+        .reactor-inner {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle,
+                #ffffff,
+                #00eaff 30%,
+                #0066ff 65%,
+                #001018
+            );
+
+            box-shadow:
+                0 0 25px #00eaff;
+        }
+
+        @keyframes pulse {
+
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.04);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+
+        }
+
+        /* TEXT */
+
+        #jarvisText {
+            text-align: center;
+            max-width: 700px;
+            min-height: 30px;
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        /* INPUT */
+
+        .inputArea {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            background: #111;
+            color: white;
+            outline: none;
+            font-size: 16px;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 0 18px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #sendButton {
+            background: #00eaff;
+            color: black;
+        }
+
+        #micButton {
+            background: #151515;
+            color: #00eaff;
+            border: 1px solid #00eaff;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* FOOTER */
+
+        footer {
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #555;
+            font-size: 12px;
+        }
+
+        @media(max-width:600px) {
+
+            .reactor {
+                width: 150px;
+                height: 150px;
+            }
+
+            .reactor-inner {
+                width: 85px;
+                height: 85px;
+            }
+
+            .inputArea {
+                flex-wrap: wrap;
+            }
+
+            #userInput {
+                width: 100%;
+                flex-basis: 100%;
+            }
+
+            button {
+                height: 50px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+    <header>
+
+        <div class="logo">
+            JARVIS
+        </div>
+
+        <div class="status" id="status">
+            ● ONLINE
+        </div>
+
+    </header>
+
+
+    <main>
+
+        <div class="reactor">
+
+            <div class="reactor-inner"></div>
+
+        </div>
+
+
+        <div id="jarvisText">
+            Hello. I'm Jarvis. How can I help you?
+        </div>
+
+
+        <div class="inputArea">
+
+            <input
+                type="text"
+                id="userInput"
+                placeholder="Talk to Jarvis..."
+                autocomplete="off"
+            >
+
+            <button id="micButton">
+                🎙️
+            </button>
+
+            <button id="sendButton">
+                Send
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <footer>
+        JARVIS 3.2 • Personal AI Assistant
+    </footer>
+
+</div>
+
+
+<!-- IMPORTANT:
+     commands.js MUST load before brain.js
+-->
+
+<script src="commands.js"></script>
+<script src="brain.js"></script>
+
+
+<script>
+
+    const input =
+        document.getElementById("userInput");
+
+    const sendButton =
+        document.getElementById("sendButton");
+
+    const micButton =
+        document.getElementById("micButton");
+
+    const jarvisText =
+        document.getElementById("jarvisText");
+
+    const status =
+        document.getElementById("status");
+
+
+    // =========================
+    // SPEAK
+    // =========================
+
+    function speak(text) {
+
+        if (!("speechSynthesis" in window)) {
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+
+        const speech =
+            new SpeechSynthesisUtterance(text);
+
+        speech.rate = 1;
+        speech.pitch = 1;
+        speech.volume = 1;
+
+        window.speechSynthesis.speak(speech);
+    }
+
+
+    // =========================
+    // SEND MESSAGE
+    // =========================
+
+    async function sendMessage() {
+
+        const text =
+            input.value.trim();
+
+        if (!text) {
+            return;
+        }
+
+        status.textContent = "● THINKING";
+
+        jarvisText.textContent =
+            "You: " + text;
+
+        input.value = "";
+
+
+        try {
+
+            const response =
+                await window.jarvisBrain.process(text);
+
+            jarvisText.textContent =
+                response;
+
+            speak(response);
+
+            status.textContent =
+                "● ONLINE";
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            jarvisText.textContent =
+                "Something went wrong.";
+
+            status.textContent =
+                "● ERROR";
+        }
+
+    }
+
+
+    // =========================
+    // SEND BUTTON
+    // =========================
+
+    sendButton.addEventListener(
+        "click",
+        sendMessage
+    );
+
+
+    // =========================
+    // ENTER KEY
+    // =========================
+
+    input.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+
+        }
+    );
+
+
+    // =========================
+    // VOICE RECOGNITION
+    // =========================
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+
+    let recognition = null;
+
+
+    if (SpeechRecognition) {
+
+        recognition =
+            new SpeechRecognition();
+
+        recognition.lang = "en-IN";
+
+        recognition.continuous = false;
+
+        recognition.interimResults = false;
+
+
+        recognition.onstart = function() {
+
+            status.textContent =
+                "● LISTENING";
+
+            jarvisText.textContent =
+                "Listening...";
+
+        };
+
+
+        recognition.onresult =
+            function(event) {
+
+                const text =
+                    event.results[0][0].transcript;
+
+                input.value = text;
+
+                sendMessage();
+
+            };
+
+
+        recognition.onerror =
+            function(event) {
+
+                console.error(
+                    "Speech error:",
+                    event.error
+                );
+
+                status.textContent =
+                    "● ONLINE";
+
+            };
+
+
+        recognition.onend =
+            function() {
+
+                status.textContent =
+                    "● ONLINE";
+
+            };
+
+    }
+
+
+    // =========================
+    // MICROPHONE BUTTON
+    // =========================
+
+    micButton.addEventListener(
+        "click",
+        function() {
+
+            if (!recognition) {
+
+                jarvisText.textContent =
+                    "Voice recognition is not supported in this browser.";
+
+                return;
+            }
+
+            recognition.start();
+
+        }
+    );
+
+
+</script>
+
+</body>
+
+</html>
