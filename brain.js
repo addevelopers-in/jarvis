@@ -1,7 +1,7 @@
 // ============================================================
 // JARVIS 3.2
 // brain.js
-// Virtual Brain
+// Local Brain — No API Required
 // ============================================================
 
 class JarvisBrain {
@@ -11,10 +11,6 @@ class JarvisBrain {
         this.history = [];
     }
 
-    // --------------------------------------------------------
-    // MEMORY
-    // --------------------------------------------------------
-
     remember(userText, jarvisText) {
 
         this.history.push({
@@ -23,30 +19,18 @@ class JarvisBrain {
             time: new Date().toISOString()
         });
 
-        // Keep the browser session lightweight
-        if (this.history.length > 20) {
+        if (this.history.length > 30) {
             this.history.shift();
         }
     }
-
-
-    // --------------------------------------------------------
-    // UNDERSTAND COMMAND
-    // --------------------------------------------------------
 
     understand(text) {
 
         const original = text.trim();
         const lower = original.toLowerCase();
 
-
-        // =========================
         // YOUTUBE
-        // =========================
-
-        if (lower === "open youtube" ||
-            lower.includes("open youtube")) {
-
+        if (lower.includes("open youtube")) {
             return {
                 type: "command",
                 command: "open_youtube",
@@ -54,13 +38,9 @@ class JarvisBrain {
             };
         }
 
+        if (lower.includes("search youtube")) {
 
-        if (
-            lower.includes("search youtube for") ||
-            lower.includes("search youtube")
-        ) {
-
-            let query = lower
+            const query = lower
                 .replace("search youtube for", "")
                 .replace("search youtube", "")
                 .trim();
@@ -72,16 +52,8 @@ class JarvisBrain {
             };
         }
 
-
-        // =========================
         // GOOGLE
-        // =========================
-
-        if (
-            lower === "open google" ||
-            lower.includes("open google")
-        ) {
-
+        if (lower.includes("open google")) {
             return {
                 type: "command",
                 command: "open_google",
@@ -89,11 +61,11 @@ class JarvisBrain {
             };
         }
 
+        if (lower.includes("search google")) {
 
-        if (lower.includes("search google for")) {
-
-            let query = lower
+            const query = lower
                 .replace("search google for", "")
+                .replace("search google", "")
                 .trim();
 
             return {
@@ -103,30 +75,8 @@ class JarvisBrain {
             };
         }
 
-
-        if (lower.startsWith("search for")) {
-
-            let query = lower
-                .replace("search for", "")
-                .trim();
-
-            return {
-                type: "command",
-                command: "google_search",
-                argument: query
-            };
-        }
-
-
-        // =========================
         // GMAIL
-        // =========================
-
-        if (
-            lower === "open gmail" ||
-            lower.includes("open gmail")
-        ) {
-
+        if (lower.includes("open gmail")) {
             return {
                 type: "command",
                 command: "open_gmail",
@@ -134,30 +84,8 @@ class JarvisBrain {
             };
         }
 
-
-        if (lower.includes("search gmail for")) {
-
-            let query = lower
-                .replace("search gmail for", "")
-                .trim();
-
-            return {
-                type: "command",
-                command: "gmail_search",
-                argument: query
-            };
-        }
-
-
-        // =========================
         // WHATSAPP
-        // =========================
-
-        if (
-            lower === "open whatsapp" ||
-            lower.includes("open whatsapp")
-        ) {
-
+        if (lower.includes("open whatsapp")) {
             return {
                 type: "command",
                 command: "open_whatsapp",
@@ -165,17 +93,12 @@ class JarvisBrain {
             };
         }
 
-
-        // =========================
         // TIME
-        // =========================
-
         if (
             lower === "time" ||
             lower.includes("what time") ||
             lower.includes("current time")
         ) {
-
             return {
                 type: "command",
                 command: "get_time",
@@ -183,17 +106,12 @@ class JarvisBrain {
             };
         }
 
-
-        // =========================
         // DATE
-        // =========================
-
         if (
             lower === "date" ||
             lower.includes("what date") ||
             lower.includes("today's date")
         ) {
-
             return {
                 type: "command",
                 command: "get_date",
@@ -201,16 +119,11 @@ class JarvisBrain {
             };
         }
 
-
-        // =========================
         // CALL
-        // =========================
-
         if (lower.startsWith("call ")) {
 
-            const contact = original
-                .substring(5)
-                .trim();
+            const contact =
+                original.substring(5).trim();
 
             return {
                 type: "command",
@@ -219,11 +132,7 @@ class JarvisBrain {
             };
         }
 
-
-        // =========================
-        // CONVERSATION
-        // =========================
-
+        // NORMAL CONVERSATION
         return {
             type: "conversation",
             command: null,
@@ -232,13 +141,14 @@ class JarvisBrain {
     }
 
 
-    // --------------------------------------------------------
-    // NORMAL AI-STYLE RESPONSE
-    // --------------------------------------------------------
+    // ==========================================
+    // LOCAL RESPONSE ENGINE
+    // ==========================================
 
     generateResponse(text) {
 
-        const lower = text.toLowerCase().trim();
+        const lower =
+            text.toLowerCase().trim();
 
 
         if (
@@ -246,20 +156,23 @@ class JarvisBrain {
             lower === "hi" ||
             lower === "hey"
         ) {
-
             return "Hello. I'm Jarvis. How can I help you?";
-        }
-
-
-        if (lower.includes("how are you")) {
-
-            return "I'm online and ready to help.";
         }
 
 
         if (lower.includes("who are you")) {
 
-            return "I am Jarvis, your personal AI assistant.";
+            return (
+                "I am Jarvis, your personal AI assistant."
+            );
+        }
+
+
+        if (lower.includes("how are you")) {
+
+            return (
+                "I'm online and ready to help."
+            );
         }
 
 
@@ -284,41 +197,79 @@ class JarvisBrain {
         }
 
 
-        if (lower.includes("jarvis")) {
+        if (lower.includes("your name")) {
 
-            return "Yes, I'm listening.";
+            return "My name is Jarvis.";
+        }
+
+
+        if (lower.includes("what can you do")) {
+
+            return (
+                "I can understand commands, open websites, " +
+                "search the web, use voice input and speak responses."
+            );
+        }
+
+
+        // Hindi responses
+
+        if (
+            lower.includes("namaste") ||
+            lower.includes("नमस्ते")
+        ) {
+
+            return "Namaste! Main Jarvis hoon. Aap kya karna chahte hain?";
+        }
+
+
+        if (
+            lower.includes("kaise ho") ||
+            lower.includes("कैसे हो")
+        ) {
+
+            return "Main bilkul ready hoon. Aap bataiye.";
+        }
+
+
+        if (
+            lower.includes("mera naam")
+        ) {
+
+            return "Aapka naam mujhe abhi bataya nahi gaya hai.";
         }
 
 
         return (
-            "I understand you. " +
-            "I'm ready to connect to my generative AI system."
+            "I can understand your command, but my " +
+            "generative AI connection has not been connected yet."
         );
     }
 
 
-    // --------------------------------------------------------
-    // PROCESS MESSAGE
-    // --------------------------------------------------------
+    // ==========================================
+    // MAIN PROCESSOR
+    // ==========================================
 
     async process(text) {
 
-        const result = this.understand(text);
+        const result =
+            this.understand(text);
 
 
-        // =========================
         // COMMAND
-        // =========================
-
         if (result.type === "command") {
 
             let response = "";
+
 
             switch (result.command) {
 
                 case "open_youtube":
 
-                    response = "Opening YouTube.";
+                    response =
+                        "Opening YouTube.";
+
                     break;
 
 
@@ -333,7 +284,9 @@ class JarvisBrain {
 
                 case "open_google":
 
-                    response = "Opening Google.";
+                    response =
+                        "Opening Google.";
+
                     break;
 
 
@@ -348,22 +301,17 @@ class JarvisBrain {
 
                 case "open_gmail":
 
-                    response = "Opening Gmail.";
-                    break;
-
-
-                case "gmail_search":
-
                     response =
-                        "Searching Gmail for " +
-                        result.argument + ".";
+                        "Opening Gmail.";
 
                     break;
 
 
                 case "open_whatsapp":
 
-                    response = "Opening WhatsApp.";
+                    response =
+                        "Opening WhatsApp.";
+
                     break;
 
 
@@ -389,19 +337,18 @@ class JarvisBrain {
 
                     response =
                         "I received your request to call " +
-                        result.argument +
-                        ". Phone integration will be connected later.";
+                        result.argument + ".";
 
                     break;
 
 
                 default:
 
-                    response = "Command received.";
+                    response =
+                        "Command received.";
             }
 
 
-            // Send command to commands.js
             if (
                 typeof executeCommand === "function"
             ) {
@@ -423,28 +370,36 @@ class JarvisBrain {
             }
 
 
-            this.remember(text, response);
+            this.remember(
+                text,
+                response
+            );
+
 
             return response;
         }
 
 
-        // =========================
-        // GENERATIVE AI RESPONSE
-        // =========================
+        // CONVERSATION
 
         const response =
             this.generateResponse(text);
 
-        this.remember(text, response);
+
+        this.remember(
+            text,
+            response
+        );
+
 
         return response;
     }
 }
 
 
-// ============================================================
-// CREATE GLOBAL JARVIS BRAIN
-// ============================================================
+// ==========================================
+// GLOBAL JARVIS
+// ==========================================
 
-window.jarvisBrain = new JarvisBrain();
+window.jarvisBrain =
+    new JarvisBrain();
