@@ -1,246 +1,323 @@
-import tkinter as tk
-from tkinter import scrolledtext
-import threading
-
+from flask import Flask, request, jsonify, render_template_string
 from brain import JarvisBrain
 
+app = Flask(__name__)
+brain = JarvisBrain()
 
-class JarvisInterface:
+HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS 3.2</title>
 
-    def __init__(self, root):
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-        self.root = root
-        self.root.title("JARVIS 3.2")
-        self.root.geometry("900x600")
+        body {
+            margin: 0;
+            background: #03060a;
+            color: #00e5ff;
+            font-family: Arial, sans-serif;
+        }
 
-        self.root.configure(bg="#050505")
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
 
-        self.brain = JarvisBrain()
+        h1 {
+            text-align: center;
+            letter-spacing: 8px;
+            margin-bottom: 5px;
+        }
 
-        # -------------------------------
-        # TITLE
-        # -------------------------------
+        .status {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
 
-        self.title = tk.Label(
-            root,
-            text="J A R V I S   3.2",
-            font=("Arial", 28, "bold"),
-            fg="#00e5ff",
-            bg="#050505"
-        )
+        #chat {
+            height: 65vh;
+            overflow-y: auto;
+            background: #080d13;
+            border: 1px solid #12313a;
+            border-radius: 15px;
+            padding: 20px;
+        }
 
-        self.title.pack(pady=20)
+        .message {
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 10px;
+            line-height: 1.5;
+        }
 
-        # -------------------------------
-        # STATUS
-        # -------------------------------
+        .user {
+            background: #10232b;
+            color: white;
+        }
 
-        self.status = tk.Label(
-            root,
-            text="● ONLINE",
-            font=("Arial", 14, "bold"),
-            fg="#00ff88",
-            bg="#050505"
-        )
+        .jarvis {
+            background: #071c20;
+            color: #00e5ff;
+        }
 
-        self.status.pack()
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
 
-        # -------------------------------
-        # CHAT WINDOW
-        # -------------------------------
+        input {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #16444e;
+            background: #080d13;
+            color: white;
+            font-size: 16px;
+        }
 
-        self.chat = scrolledtext.ScrolledText(
-            root,
-            wrap=tk.WORD,
-            font=("Arial", 13),
-            bg="#101010",
-            fg="white",
-            insertbackground="white"
-        )
+        button {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #00e5ff;
+            color: black;
+            font-weight: bold;
+        }
 
-        self.chat.pack(
-            padx=30,
-            pady=20,
-            fill=tk.BOTH,
-            expand=True
-        )
+        button:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
 
-        self.chat.insert(
-            tk.END,
-            "JARVIS: Systems online.\n"
-        )
+<body>
 
-        # -------------------------------
-        # INPUT AREA
-        # -------------------------------
+<div class="container">
 
-        bottom = tk.Frame(
-            root,
-            bg="#050505"
-        )
+    <h1>JARVIS 3.2</h1>
 
-        bottom.pack(
-            fill=tk.X,
-            padx=30,
-            pady=20
-        )
+    <div class="status">
+        ● ONLINE
+    </div>
 
-        self.input_box = tk.Entry(
-            bottom,
-            font=("Arial", 14),
-            bg="#151515",
-            fg="white",
-            insertbackground="white"
-        )
+    <div id="chat">
+        <div class="message jarvis">
+            JARVIS: Systems online. How can I help?
+        </div>
+    </div>
 
-        self.input_box.pack(
-            side=tk.LEFT,
-            fill=tk.X,
-            expand=True,
-            ipady=10
-        )
+    <div class="controls">
 
-        self.input_box.bind(
-            "<Return>",
-            self.send_message
-        )
+        <input
+            id="message"
+            placeholder="Talk to Jarvis..."
+            autocomplete="off"
+        >
 
-        self.send_button = tk.Button(
-            bottom,
-            text="SEND",
-            font=("Arial", 12, "bold"),
-            command=self.send_message,
-            bg="#00e5ff",
-            fg="black"
-        )
+        <button onclick="sendMessage()">
+            SEND
+        </button>
 
-        self.send_button.pack(
-            side=tk.RIGHT,
-            padx=(10, 0),
-            ipadx=15,
-            ipady=8
-        )
+        <button onclick="startVoice()">
+            🎙
+        </button>
 
-        # -------------------------------
-        # VOICE BUTTON
-        # -------------------------------
+    </div>
 
-        self.voice_button = tk.Button(
-            root,
-            text="🎙  ACTIVATE JARVIS",
-            font=("Arial", 14, "bold"),
-            command=self.voice_mode,
-            bg="#151515",
-            fg="#00e5ff"
-        )
+</div>
 
-        self.voice_button.pack(
-            pady=(0, 20),
-            ipadx=20,
-            ipady=10
-        )
+<script>
 
-    # ========================================================
-    # SEND MESSAGE
-    # ========================================================
+async function sendMessage() {
 
-    def send_message(self, event=None):
+    const input = document.getElementById("message");
+    const text = input.value.trim();
 
-        text = self.input_box.get().strip()
+    if (!text) return;
 
-        if not text:
-            return
+    addMessage("YOU", text, "user");
 
-        self.input_box.delete(0, tk.END)
+    input.value = "";
 
-        self.chat.insert(
-            tk.END,
-            f"\nYOU: {text}\n"
-        )
+    try {
 
-        self.status.config(
-            text="● THINKING",
-            fg="#ffaa00"
-        )
+        const response = await fetch("/ask", {
 
-        threading.Thread(
-            target=self.process_message,
-            args=(text,),
-            daemon=True
-        ).start()
+            method: "POST",
 
-    # ========================================================
-    # PROCESS
-    # ========================================================
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-    def process_message(self, text):
+            body: JSON.stringify({
+                message: text
+            })
 
-        try:
+        });
 
-            response = self.brain.process(text)
+        const data = await response.json();
 
-        except Exception as error:
+        addMessage(
+            "JARVIS",
+            data.response,
+            "jarvis"
+        );
 
-            response = (
-                "I encountered an error: "
-                + str(error)
-            )
+        speak(data.response);
 
-        self.root.after(
-            0,
-            lambda: self.display_response(response)
-        )
+    } catch (error) {
 
-    # ========================================================
-    # DISPLAY RESPONSE
-    # ========================================================
-
-    def display_response(self, response):
-
-        self.chat.insert(
-            tk.END,
-            f"JARVIS: {response}\n"
-        )
-
-        self.chat.see(tk.END)
-
-        self.status.config(
-            text="● ONLINE",
-            fg="#00ff88"
-        )
-
-    # ========================================================
-    # VOICE MODE
-    # ========================================================
-
-    def voice_mode(self):
-
-        self.status.config(
-            text="● VOICE MODE",
-            fg="#00e5ff"
-        )
-
-        self.chat.insert(
-            tk.END,
-            "\nJARVIS: Voice system will be "
-            "connected in the next integration.\n"
-        )
-
-        self.chat.see(tk.END)
+        addMessage(
+            "JARVIS",
+            "Connection error.",
+            "jarvis"
+        );
+    }
+}
 
 
-# ============================================================
-# START JARVIS
-# ============================================================
+function addMessage(name, text, type) {
 
-def main():
+    const chat = document.getElementById("chat");
 
-    root = tk.Tk()
+    const message = document.createElement("div");
 
-    app = JarvisInterface(root)
+    message.className = "message " + type;
 
-    root.mainloop()
+    message.innerHTML =
+        "<strong>" +
+        name +
+        ":</strong> " +
+        escapeHtml(text);
+
+    chat.appendChild(message);
+
+    chat.scrollTop = chat.scrollHeight;
+}
+
+
+function escapeHtml(text) {
+
+    const div = document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+
+function speak(text) {
+
+    if (!("speechSynthesis" in window))
+        return;
+
+    const speech =
+        new SpeechSynthesisUtterance(text);
+
+    speech.rate = 1;
+    speech.pitch = 1;
+
+    window.speechSynthesis.speak(speech);
+}
+
+
+function startVoice() {
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+
+        addMessage(
+            "JARVIS",
+            "Voice recognition is not supported by this browser.",
+            "jarvis"
+        );
+
+        return;
+    }
+
+    const recognition =
+        new SpeechRecognition();
+
+    recognition.lang = "en-IN";
+
+    recognition.start();
+
+    recognition.onresult = function(event) {
+
+        const text =
+            event.results[0][0].transcript;
+
+        document.getElementById(
+            "message"
+        ).value = text;
+
+        sendMessage();
+    };
+}
+
+
+document.getElementById("message")
+    .addEventListener("keydown", function(event) {
+
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
+"""
+
+
+@app.route("/")
+def home():
+    return render_template_string(HTML)
+
+
+@app.route("/ask", methods=["POST"])
+def ask():
+
+    data = request.get_json()
+
+    message = data.get("message", "").strip()
+
+    if not message:
+        return jsonify({
+            "response": "Please say something."
+        })
+
+    try:
+
+        response = brain.process(message)
+
+        return jsonify({
+            "response": response
+        })
+
+    except Exception as error:
+
+        return jsonify({
+            "response": "Jarvis encountered an error."
+        })
 
 
 if __name__ == "__main__":
-    main()
+
+    app.run(
+        host="0.0.0.0",
+        port=5000
+    )
